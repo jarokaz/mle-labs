@@ -14,7 +14,7 @@ gsutil cp -R $SOURCE_DIR $LOCAL_DIR
 ```
 PROJECT_ID=mlops-dev-env
 IMAGE=gcr.io/${PROJECT_ID}/lab-01-tfserving
-cd ~/mle-labs/lab-01-scale-out-tfserving
+cd ~/mle-labs/lab-01-scale-out-tfserving/tf-serving/serving-image
 docker build -t ${IMAGE} .
 ```
 
