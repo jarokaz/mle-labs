@@ -3,9 +3,9 @@
 ### Download the ResNet101 model
 
 ```
-LOCAL_DIR=/tmp/resnet101/1
+LOCAL_DIR=/tmp/resnet101
 mkdir $LOCAL_DIR
-gsutil cp -R gs://mlops-dev-workspace/models/resnet_serving/ $LOCAL_DIR
+gsutil cp -R gs://mlops-dev-workspace/models/resnet_serving/1 $LOCAL_DIR
 ```
 
 
