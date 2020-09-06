@@ -6,7 +6,8 @@ metadata:
   labels:
     app: tf-serving
 spec:
-  type: ClusterIP
+  #type: ClusterIP
+  type: LoadBalancer
   ports:
   - port: 8500
     protocol: TCP
