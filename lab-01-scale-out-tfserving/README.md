@@ -5,7 +5,7 @@
 NAME=tf-serving
 CLUSTER=lab1-cluster
 ZONE=us-central1-a
-MACHINE_TYPE=n1-standard-4
+MACHINE_TYPE=n1-standard-8
 NUM_NODES=2
 
 gcloud container node-pools create $NAME \

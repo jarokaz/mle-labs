@@ -1,4 +1,4 @@
-# Copyright 2019 Google Inc. All Rights Reserved.
+# Copyright 2020 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,23 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-resources:
-- locust-master.yaml
-- locust-worker.yaml
-- locust-master-service.yaml
-
-images:
-- name: locustio/locust
-  newName: gcr.io/mlops-dev-env/locust:latest
-
-replicas:
-- name: locust-worker
-  count: 64
-    
-patches:
-- path: patch.yaml
-  target:
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: tf-serving
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
     kind: Deployment
+    name: tf-serving
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 50
+    

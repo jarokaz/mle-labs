@@ -18,6 +18,7 @@ kind: Kustomization
 resources:
 - tfserving-deployment.yaml
 - tfserving-service.yaml
+- tfserving-hpa.yaml
 
 images:
 - name: tensorflow/serving
@@ -25,7 +26,7 @@ images:
 
 replicas:
 - name: tf-serving
-  count: 2
+  count: 1
 
 configMapGenerator:
 - name: tfserving-configs
@@ -38,4 +39,6 @@ configMapGenerator:
 patchesStrategicMerge:
 - tfserving-node-pool.yaml
 - tfserving-resources.yaml
+
+
 
