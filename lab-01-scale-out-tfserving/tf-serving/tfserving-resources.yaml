@@ -12,30 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-resources:
-- tfserving-deployment.yaml
-- tfserving-service.yaml
-
-images:
-- name: tensorflow/serving
-  newName: tensorflow/serving:2.3.0
-
-replicas:
-- name: tf-serving
-  count: 2
-
-configMapGenerator:
-- name: tfserving-configs
-  literals:
-  - MODEL_NAME=resnet_serving
-  - MODEL_PATH=gs://mlops-dev-workspace/models/resnet_serving
-  options:
-    disableNameSuffixHash: true   
-
-patchesStrategicMerge:
-- tfserving-node-pool.yaml
-- tfserving-resources.yaml
-
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tf-serving
+spec:
+  template:
+    spec:
+      containers:
+      - name: tf-serving
+        resources:
+          limits:
+            cpu: "3.5"
+            memory: 11Gi
+          requests:
+            cpu: "3.5"
+            memory: 11Gi
