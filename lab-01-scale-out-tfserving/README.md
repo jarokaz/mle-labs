@@ -1,3 +1,3 @@
-# Using Kubernetes to deployed a scaled-out configuration of TensorFlow Serving
+# Using Kubernetes to deploy a scaled-out configuration of TensorFlow Serving
 
 
