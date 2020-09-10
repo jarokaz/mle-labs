@@ -28,7 +28,7 @@ trap 'err_handler "$LINENO" "$BASH_COMMAND" "$?"' ERR
 
 # Check command line parameters
 if [[ $# < 1 ]]; then
-  echo 'USAGE:  ./install.sh PROJECT_ID  [NAME_PREFIX=PROJECT_ID] [REGION=us-central1] [ZONE=us-central1-a]'
+  echo 'USAGE:  ./install.sh PROJECT_ID  [NAME_PREFIX=PROJECT_ID]  [ZONE=us-central1-a]'
   exit 1
 fi
 
@@ -36,24 +36,24 @@ fi
 
 PROJECT_ID=${1}
 NAME_PREFIX=${2:-$PROJECT_ID}
-REGION=${3:-us-central1} 
-ZONE=${4:-us-central1-a}
+ZONE=${3:-us-central1-a}
 
 # Enable services
 echo INFO: Enabling required services
 
-gcloud services enable \
-container.googleapis.com \
-cloudresourcemanager.googleapis.com \
-iam.googleapis.com \
-containerregistry.googleapis.com \
-containeranalysis.googleapis.com 
+#gcloud services enable \
+#container.googleapis.com \
+#cloudresourcemanager.googleapis.com \
+#iam.googleapis.com \
+#containerregistry.googleapis.com \
+#containeranalysis.googleapis.com 
 
 echo INFO: Required services enabled
 
 # Provision a GKE cluster
-CLUSTER_NAME=$(NAME_PREFIX)-cluster
+CLUSTER_NAME=$NAME_PREFIX-cluster
 
 gcloud container clusters create $CLUSTER_NAME \
+--zone $ZONE
 
 
