@@ -32,10 +32,7 @@ spec:
       containers:
         - image: locustio/locust
           name: locust-master
-          args: ["-f", "/tasks/tasks.py",  "--master", "--step-load"]
-          envFrom:
-            - configMapRef:
-                name: test-config-locations  
+          args: ["-f", "/tasks/tasks.py",  "--master", "--step-load", "--host", "http://tf-serving:8501"]
           ports:
             - name: loc-master-web
               containerPort: 8089
@@ -48,10 +45,10 @@ spec:
               protocol: TCP
           resources:
             limits:
-              cpu: "1"
-              memory: 4Gi
+              cpu: "0.5"
+              memory: 1Gi
             requests:
-              cpu: "1"
-              memory: 4Gi
+              cpu: "0.5"
+              memory: 1Gi
 
         

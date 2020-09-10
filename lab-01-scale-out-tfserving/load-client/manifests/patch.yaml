@@ -12,32 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-resources:
-- locust-master.yaml
-- locust-worker.yaml
-- locust-master-service.yaml
-
-images:
-- name: locustio/locust
-  newName: gcr.io/mlops-dev-env/locust:latest
-
-replicas:
-- name: locust-worker
-  count: 32
-    
-patches:
-- path: patch.yaml
-  target:
-    kind: Deployment
-
-configMapGenerator:
-- name: test-config-locations
-  literals:
-    - LOCUST_TEST_BUCKET=mlops-dev-workspace
-    - LOCUST_TEST_CONFIG=test-config/test-config.json
-    - LOCUST_TEST_DATA=test-config/test-data.json
-  options:
-    disableNameSuffixHash: true
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: not-important
+spec:
+  template:
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: cloud.google.com/gke-nodepool
+                operator: In
+                values:
+                - default-pool     

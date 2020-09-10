@@ -35,14 +35,11 @@ spec:
           env:
             - name: LOCUST_MASTER
               value: locust-master
-          envFrom:
-            - configMapRef:
-                name: test-config-locations        
           resources:
             limits:
-              cpu: "1"
-              memory: 2Gi
+              cpu: "0.2"
+              memory: 1Gi
             requests:
-              cpu: "1"
-              memory: 2Gi
+              cpu: "0.2"
+              memory: 1Gi
   
