@@ -28,7 +28,7 @@ trap 'err_handler "$LINENO" "$BASH_COMMAND" "$?"' ERR
 
 # Check command line parameters
 if [[ $# < 1 ]]; then
-  echo 'USAGE:  ./install.sh PROJECT_ID  [NAME_PREFIX=PROJECT_ID]  [ZONE=us-central1-a]'
+  echo 'USAGE:  ./install.sh PROJECT_ID  [NAME_PREFIX=PROJECT_ID]  [ZONE=us-central1-a] [MACHINE_TYPE=n1-standard-4]'
   exit 1
 fi
 
@@ -37,6 +37,7 @@ fi
 PROJECT_ID=${1}
 NAME_PREFIX=${2:-$PROJECT_ID}
 ZONE=${3:-us-central1-a}
+MACHINE_TYPE=${4:-n1-standard-4}
 
 # Enable services
 echo INFO: Enabling required services
@@ -54,6 +55,7 @@ echo INFO: Required services enabled
 CLUSTER_NAME=$NAME_PREFIX-cluster
 
 gcloud container clusters create $CLUSTER_NAME \
---zone $ZONE
+--zone $ZONE \
+--machine-type $MACHINE_TYPE
 
 
