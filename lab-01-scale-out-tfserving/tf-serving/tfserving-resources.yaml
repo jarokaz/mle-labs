@@ -22,9 +22,6 @@ spec:
       containers:
       - name: tf-serving
         resources:
-#          limits:
-#            cpu: "3.5"
-#            memory: 11Gi
           requests:
             cpu: "3"
             memory: 4Gi
