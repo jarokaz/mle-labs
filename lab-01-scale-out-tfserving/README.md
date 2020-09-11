@@ -5,7 +5,7 @@
 NAME=tf-serving
 CLUSTER=lab1-cluster
 ZONE=us-central1-a
-MACHINE_TYPE=n1-standard-8
+MACHINE_TYPE=n1-standard-4
 MIN_NODES=1
 MAX_NODES=3
 NUM_NODES=1
@@ -18,12 +18,6 @@ gcloud container node-pools create $NAME \
 --min-nodes $MIN_NODES \
 --max-nodes $MAX_NODES \
 --num-nodes $NUM_NODES
-
-gcloud container node-pools create $NAME \
---cluster $CLUSTER \
---zone $ZONE \
---machine-type $MACHINE_TYPE \
---num-nodes 1
 ```
 
 

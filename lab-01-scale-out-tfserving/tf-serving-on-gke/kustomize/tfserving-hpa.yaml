@@ -23,6 +23,6 @@ spec:
     kind: Deployment
     name: tf-serving
   minReplicas: 1
-  maxReplicas: 6
+  maxReplicas: 4
   targetCPUUtilizationPercentage: 60
     
