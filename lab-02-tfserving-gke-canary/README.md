@@ -78,3 +78,21 @@ Deploy Locust.
 ```
 kubectl apply -k locust/manifests
 ```
+
+## Deploying TF Serving with two versions of ResNet101 model
+
+Create a GKE node pool for TF Serving.
+
+```
+NODE_POOL_NAME=tf-serving
+
+gcloud container node-pools create $NODE_POOL_NAME \
+--cluster $CLUSTER_NAME \
+--zone $ZONE \
+--machine-type n1-standard-4 \
+--enable-autoscaling \
+--min-nodes 1 \
+--max-nodes 3 \
+--num-nodes 1
+```
+
