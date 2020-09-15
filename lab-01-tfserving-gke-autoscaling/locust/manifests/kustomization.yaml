@@ -26,9 +26,5 @@ images:
 
 replicas:
 - name: locust-worker
-  count: 64
+  count: 32
     
-patches:
-- path: patch.yaml
-  target:
-    kind: Deployment

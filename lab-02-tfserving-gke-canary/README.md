@@ -64,3 +64,6 @@ Build a docker image with Locust runtime, scripts, and configurations.
 ```
 docker build -t gcr.io/$PROJECT_ID/locust locust/locust-image
 ```
+
+Deploy Locust to your GKE cluster
+
