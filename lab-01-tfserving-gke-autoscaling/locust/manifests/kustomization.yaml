@@ -24,7 +24,5 @@ images:
 - name: locustio/locust
   newName: gcr.io/mlops-dev-env/locust:latest
 
-replicas:
-- name: locust-worker
-  count: 32
-    
+
+

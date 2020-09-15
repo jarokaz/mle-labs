@@ -12,19 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Service
 metadata:
   name: tf-serving
+  namespace: default
+  labels:
+    app: tf-serving
 spec:
-  template:
-    spec:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: cloud.google.com/gke-nodepool
-                operator: In
-                values:
-                - tf-serving     
+  type: ClusterIP
+  #type: LoadBalancer
+  ports:
+  - port: 8500
+    protocol: TCP
+    name: tf-serving-grpc
+  - port: 8501
+    protocol: TCP
+    name: tf-serving-http
+  selector:
+    app: tf-serving

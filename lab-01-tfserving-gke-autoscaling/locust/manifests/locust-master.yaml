@@ -29,15 +29,6 @@ spec:
       labels:
         app: locust-master
     spec:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: cloud.google.com/gke-nodepool
-                operator: In
-                values:
-                - default-pool    
       containers:
         - image: locustio/locust
           name: locust-master

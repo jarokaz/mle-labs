@@ -12,17 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: autoscaling/v1
-#apiVersion: autoscaling/v2beta2
-kind: HorizontalPodAutoscaler
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: tf-serving
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: tf-serving
-  minReplicas: 1
-  maxReplicas: 4
-  targetCPUUtilizationPercentage: 60
-    
+  name: tfserving-configs
+data:
+  MODEL_NAME: resnet_serving
+  MODEL_PATH: gs://mlops-dev-workspace/models/resnet_serving
