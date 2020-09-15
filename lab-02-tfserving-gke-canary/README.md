@@ -56,3 +56,11 @@ Ensure that the corresponding Kubernetes Pods are deployed and all containers ar
 ```
 kubectl get pods -n istio-system
 ```
+
+## Deploying Locust load testing tool
+
+Build a docker image with Locust runtime, scripts, and configurations.
+
+```
+docker build -t gcr.io/$PROJECT_ID/locust locust/locust-image
+```
