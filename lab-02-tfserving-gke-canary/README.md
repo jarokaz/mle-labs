@@ -67,3 +67,14 @@ docker build -t gcr.io/$PROJECT_ID/locust locust/locust-image
 
 Deploy Locust to your GKE cluster
 
+```
+docker push gcr.io/$PROJECT_ID/locust
+```
+
+Update the `newName` field in the `images` section of the `locust/manifests/kustomization.yaml` file with the name of your image - `gcr.io/<YOUR_PROJECT_ID>/locust:latest`.
+
+Deploy Locust.
+
+```
+kubectl apply -k locust/manifests
+```
