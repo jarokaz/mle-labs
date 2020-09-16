@@ -29,15 +29,6 @@ spec:
       labels:
         app: tf-serving
     spec:
-  #    affinity:
-  #      nodeAffinity:
-  #        requiredDuringSchedulingIgnoredDuringExecution:
-  #          nodeSelectorTerms:
-  #          - matchExpressions:
-  #            - key: cloud.google.com/gke-nodepool
-  #              operator: In
-  #              values:
-  #              - tf-serving   
       containers:
       - name: tf-serving
         image: "tensorflow/serving:2.3.0"
@@ -63,7 +54,7 @@ spec:
           protocol: TCP
         resources:
           requests:
-            cpu: "3.5"
+            cpu: "3"
             memory: 4Gi
         
 
