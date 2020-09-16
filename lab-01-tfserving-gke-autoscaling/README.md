@@ -1,35 +1,37 @@
 ## Lab Overview
+
+TBD
+
+TF Serving is deployed as a Kubernetes Deployment and exposed as a Kubernetes Service. 
+The number of replicas in the deployment is controlled by Horizontal Pod Autoscaler based on 
+the CPU utilization metrics.
+
+
 ## Setup and Requirements
 
-Set the project ID
+Set the default compute zone
 
 ```
 PROJECT_ID=mlops-dev-env
-gcloud config set project $PROJECT_ID
+gcloud config set compute/zone us-central1-f
 ```
 
-## Creating a Kubernetes cluster 
+## Creating a Kubernetes cluster
 
-Set the name and the zone for your cluster
+To create a new cluster with 3 nodes in the default node pool, run the following command.
 
-```
-CLUSTER_NAME=lab1-cluster
-ZONE=us-central1-a
-```
-
-Create a GKE cluster with a default node pool.
 
 ```
+CLUSTER_NAME=tfserving-cluster
+
 gcloud beta container clusters create $CLUSTER_NAME \
-  --project=$PROJECT_ID \
   --cluster-version=latest \
   --machine-type=n1-standard-4 \
-  --num-nodes=3 \
-  --zone=$ZONE
-
+  --enable-autoscaling \
+  --min-nodes=1 \
+  --max-nodes=3 \
+  --num-nodes=1 
 ```
-
-## Verifying the installation
 
 Check that the cluster is up and running
 
@@ -40,8 +42,16 @@ gcloud container clusters list
 Get the credentials for you new cluster so you can interact with it using `kubectl`.
 
 ```
-gcloud container clusters get-credentials $CLUSTER_NAME --zone $ZONE
+gcloud container clusters get-credentials $CLUSTER_NAME 
 ```
+
+List the cluster's nodes.
+
+```
+kubectl get nodes
+```
+
+Notice that the cluster has only one node.
 
 
 ## Deploying Locust load testing tool
@@ -52,7 +62,7 @@ Build a docker image with Locust runtime, scripts, and configurations.
 docker build -t gcr.io/$PROJECT_ID/locust locust/locust-image
 ```
 
-Deploy Locust to your GKE cluster
+Push the image to your project's Container Registry.
 
 ```
 docker push gcr.io/$PROJECT_ID/locust
@@ -80,53 +90,49 @@ http://[EXTERNAL-IP]:8089
 
 ## Deploying TF Serving and ResNet101 serving model.
 
-### Create a GKE node pool for TF Serving. 
 
-The node pool is configured with cluster autoscaling.
-
-```
-NODE_POOL_NAME=tf-serving
-
-gcloud container node-pools create $NODE_POOL_NAME \
---cluster $CLUSTER_NAME \
---zone $ZONE \
---machine-type n1-standard-4 \
---enable-autoscaling \
---min-nodes 1 \
---max-nodes 3 \
---num-nodes 1
-```
-
-Verify that the node pool has been provisioned. 
+Update and create the ConfigMap with the resnet_serving model location.
 
 ```
-kubectl get nodes
+kubectl apply -f tf-serving/tfserving-configmap.yaml
 ```
-You should see one node where the name starts with the prefix `gke-lab1-cluster-tf-serving`.
 
-### Deploy TF Serving
-
-TF Serving is deployed as a Kubernetes Deployment and exposed as a Kubernetes Service. 
-The number of replicas in the deployment is controlled by Horizontal Pod Autoscaler based on 
-the CPU utilization metrics.
-
-To create TF Serving Deployment.
+Create TF Serving Deployment.
 
 ```
 kubectl apply -f tf-serving/tfserving-deployment.yaml
 ```
 
-To create  TF Serving Service.
-
-```
-kubectl apply -f tf-serving/tfserving-service.yaml
-```
-
-To create Horizontal Pod Autoscaler.
+Create Horizontal Pod Autoscaler.
 
 ```
 kubectl apply -f tf-serving/tfserving-hpa.yaml
 ```
 
+Create  TF Serving Service.
 
+```
+kubectl apply -f tf-serving/tfserving-service.yaml
+```
+
+Get the external address for the TF Serving service
+
+```
+kubectl get svc tf-serving
+```
+
+Validate that the model has been deployed.
+
+```
+curl -d @locust/locust-image/test-config/request-body.json -X POST http://[EXTERNAL_IP]:8501/v1/models/resnet_serving:predict
+```
+
+## Load test the model
+
+```
+cd locust
+locust -f tasks.py --headless --users 32 --spawn-rate 1 --step-load --step-users 1 --step-time 30s --host http://[EXTERNAL_IP]:8501
+```
+
+Observe the TF Serving Deployment in GKE dashboard.
 

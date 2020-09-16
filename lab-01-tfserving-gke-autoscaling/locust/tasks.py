@@ -25,8 +25,8 @@ import os
 import locust
 
 
-TEST_REQUEST_BODY = 'test-config/request-body.json'
-TEST_CONFIG = 'test-config/test-config.json'
+TEST_REQUEST_BODY = 'request-body.json'
+TEST_CONFIG = 'test-config.json'
 
 
 class TFServingClient(locust.HttpUser):
