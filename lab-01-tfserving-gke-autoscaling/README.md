@@ -13,6 +13,7 @@ Set the default compute zone
 
 ```
 PROJECT_ID=mlops-dev-env
+gcloud config set project $PROJECT_ID
 gcloud config set compute/zone us-central1-f
 ```
 
@@ -54,41 +55,9 @@ kubectl get nodes
 Notice that the cluster has only one node.
 
 
-## Deploying Locust load testing tool
 
-Build a docker image with Locust runtime, scripts, and configurations.
 
-```
-docker build -t gcr.io/$PROJECT_ID/locust locust/locust-image
-```
-
-Push the image to your project's Container Registry.
-
-```
-docker push gcr.io/$PROJECT_ID/locust
-```
-
-Update the `newName` field in the `images` section of the `locust/manifests/kustomization.yaml` file with the name of your image - `gcr.io/<YOUR_PROJECT_ID>/locust:latest`.
-
-Deploy Locust.
-
-```
-kubectl apply -k locust/manifests
-```
-
-Retrieve the external IP address to Locust web interface.
-
-```
-kubectl get service locust-master
-```
-You may need to wait a couple of minutes before the IP address is available
-
-To connect to Locust web interface navigate to 
-```
-http://[EXTERNAL-IP]:8089
-```
-
-## Deploying TF Serving and ResNet101 serving model.
+## Deploying a model.
 
 
 Update and create the ConfigMap with the resnet_serving model location.
@@ -103,11 +72,6 @@ Create TF Serving Deployment.
 kubectl apply -f tf-serving/tfserving-deployment.yaml
 ```
 
-Create Horizontal Pod Autoscaler.
-
-```
-kubectl apply -f tf-serving/tfserving-hpa.yaml
-```
 
 Create  TF Serving Service.
 
@@ -121,11 +85,25 @@ Get the external address for the TF Serving service
 kubectl get svc tf-serving
 ```
 
-Validate that the model has been deployed.
+Verify that the model is up and operational.
 
 ```
-curl -d @locust/locust-image/test-config/request-body.json -X POST http://[EXTERNAL_IP]:8501/v1/models/resnet_serving:predict
+curl -d @locust/request-body.json -X POST http://[EXTERNAL_IP]:8501/v1/models/resnet_serving:predict
 ```
+
+Configure Horizontal Pod Autoscaler.
+
+```
+kubectl autoscale deployment tf-serving --cpu-percent=60 --min=1 --max=4
+```
+
+Check the status of the autoscaler.
+
+```
+kubectl get hpa
+```
+
+
 
 ## Load test the model
 
@@ -136,3 +114,12 @@ locust -f tasks.py --headless --users 32 --spawn-rate 1 --step-load --step-users
 
 Observe the TF Serving Deployment in GKE dashboard.
 
+```
+https://console.cloud.google.com/kubernetes/deployment/us-central1-f/tfserving-cluster/default/tf-serving/overview
+```
+
+Observe the default node-pool
+
+```
+https://console.cloud.google.com/kubernetes/nodepool/us-central1-f/tfserving-cluster/default-pool
+```

@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
       - name: tf-serving
-        image: "tensorflow/serving:2.3.0"
+        image: "gcr.io/mlops-dev-env/tf-serving"
         args: 
         - "--model_name=$(MODEL_NAME)"
         - "--model_base_path=$(MODEL_PATH)" 
