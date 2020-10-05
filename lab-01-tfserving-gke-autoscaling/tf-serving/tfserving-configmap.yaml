@@ -18,4 +18,4 @@ metadata:
   name: tfserving-configs
 data:
   MODEL_NAME: resnet_serving
-  MODEL_PATH: gs://mlops-dev-workspace/models/resnet_serving
+  MODEL_PATH: gs://labs-workspace/models/resnet_serving
