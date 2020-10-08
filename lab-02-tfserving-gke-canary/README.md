@@ -1,11 +1,29 @@
-## Lab Overview
+# Progressive delivery of TF Serving deployments  with GKE and Istio
+
+## Introduction
+
+Istio is an open source framework for connecting, securing, and managing microservices, including services running on Google Kubernetes Engine (GKE). It lets you create a network of deployed services with load balancing, service-to-service authentication, monitoring, and more, without requiring any changes in service code.
+
+This lab shows you how to use Istio on Kubernetes Engine to facilitate progressive delivery of TensorFlow machine learning model served through TF Serving.
+
+
+
+
 ## Setup and Requirements
+
+### Qwiklabs setup
+
+### Activate Cloud Shell
+
+## Set up your GKE cluster
+
 
 Set the project ID
 
 ```
-PROJECT_ID=mlops-dev-env
+PROJECT_ID=jk-mlops-dev
 gcloud config set project $PROJECT_ID
+gcloud config set compute/zone us-central1-f
 ```
 
 ## Creating a Kubernetes cluster with Istio
@@ -14,7 +32,6 @@ Set the name and the zone for your cluster
 
 ```
 CLUSTER_NAME=lab2-cluster
-ZONE=us-central1-a
 ```
 
 Create a GKE cluster with Istio enabled and with mTLS in permissive mode:
