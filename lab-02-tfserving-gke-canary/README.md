@@ -58,7 +58,7 @@ gcloud container clusters list
 Get the credentials for you new cluster so you can interact with it using `kubectl`.
 
 ```
-gcloud container clusters get-credentials $CLUSTER_NAME --zone $ZONE
+gcloud container clusters get-credentials $CLUSTER_NAME
 ```
 
 Ensure the following Kubernetes services are deployed: `istio-citadel`, `istio-egressgateway`, `istio-pilot`, `istio-ingressgateway`, `istio-policy`, `istio-sidecar-injector`, and `istio-telemetry`
