@@ -43,8 +43,7 @@ gcloud beta container clusters create $CLUSTER_NAME \
   --istio-config=auth=MTLS_PERMISSIVE \
   --cluster-version=latest \
   --machine-type=n1-standard-4 \
-  --num-nodes=3 \
-  --zone=$ZONE
+  --num-nodes=3 
 
 ```
 
