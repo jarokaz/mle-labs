@@ -17,5 +17,5 @@ kind: ConfigMap
 metadata:
   name: tfserving-configs
 data:
-  MODEL_NAME: resnet_serving
-  MODEL_PATH: gs://labs-workspace/models/resnet_serving
+  MODEL_NAME: image_classifier
+  MODEL_PATH: gs://labs-workspace/models/resnet_101

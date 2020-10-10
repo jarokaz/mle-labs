@@ -26,7 +26,7 @@ gcloud config set project $PROJECT_ID
 gcloud config set compute/zone us-central1-f
 ```
 
-## Creating a Kubernetes cluster with Istio
+### Creating a Kubernetes cluster with Istio
 
 Set the name and the zone for your cluster
 
@@ -47,7 +47,7 @@ gcloud beta container clusters create $CLUSTER_NAME \
 
 ```
 
-## Verifying the installation
+### Verifying the installation
 
 Check that the cluster is up and running
 
@@ -72,6 +72,10 @@ Ensure that the corresponding Kubernetes Pods are deployed and all containers ar
 ```
 kubectl get pods -n istio-system
 ```
+
+## Deploying ResNet models
+
+
 
 ## Deploying Locust load testing tool
 

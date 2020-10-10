@@ -12,7 +12,7 @@ the CPU utilization metrics.
 Set the default compute zone
 
 ```
-PROJECT_ID=mlops-dev-env
+PROJECT_ID=jk-mlops-dev
 gcloud config set project $PROJECT_ID
 gcloud config set compute/zone us-central1-f
 ```
@@ -23,7 +23,7 @@ To create a new cluster with 3 nodes in the default node pool, run the following
 
 
 ```
-CLUSTER_NAME=tfserving-cluster
+CLUSTER_NAME=lab1-cluster
 
 gcloud beta container clusters create $CLUSTER_NAME \
   --cluster-version=latest \
@@ -88,7 +88,7 @@ kubectl get svc tf-serving
 Verify that the model is up and operational.
 
 ```
-curl -d @locust/request-body.json -X POST http://[EXTERNAL_IP]:8501/v1/models/resnet_serving:predict
+curl -d @locust/request-body.json -X POST http://[EXTERNAL_IP]:8501/v1/models/image_classifier:predict
 ```
 
 Configure Horizontal Pod Autoscaler.
@@ -115,11 +115,11 @@ locust -f tasks.py --headless --users 32 --spawn-rate 1 --step-load --step-users
 Observe the TF Serving Deployment in GKE dashboard.
 
 ```
-https://console.cloud.google.com/kubernetes/deployment/us-central1-f/tfserving-cluster/default/tf-serving/overview
+https://console.cloud.google.com/kubernetes/deployment/us-central1-f/lab1-cluster/default/tf-serving/overview
 ```
 
 Observe the default node-pool
 
 ```
-https://console.cloud.google.com/kubernetes/nodepool/us-central1-f/tfserving-cluster/default-pool
+https://console.cloud.google.com/kubernetes/nodepool/us-central1-f/lab1-cluster/default-pool
 ```
