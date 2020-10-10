@@ -18,4 +18,5 @@ metadata:
   name: tfserving-configs
 data:
   MODEL_NAME: resnet_classifier
-  MODEL_PATH: gs://labs-workspace/models/resnet_101
+  RESNET50_PATH: gs://labs-workspace/models/resnet_50
+  RESNET101_PATH: gs://labs-workspace/models/resnet_101

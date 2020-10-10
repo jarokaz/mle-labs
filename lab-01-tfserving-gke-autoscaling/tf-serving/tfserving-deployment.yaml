@@ -15,19 +15,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: tf-serving
+  name: image-classifier
   namespace: default
   labels:
-    app: tf-serving
+    app: image-classifier
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: tf-serving
+      app: image-classifier
   template:
     metadata:
       labels:
-        app: tf-serving
+        app: image-classifier
     spec:
       containers:
       - name: tf-serving

@@ -15,12 +15,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: tf-serving
+  name: image-classifier
   namespace: default
   labels:
-    app: tf-serving
+    app: image-classifier
 spec:
-  #type: ClusterIP
   type: LoadBalancer
   ports:
   - port: 8500
@@ -30,4 +29,4 @@ spec:
     protocol: TCP
     name: tf-serving-http
   selector:
-    app: tf-serving
+    app: image-classifier

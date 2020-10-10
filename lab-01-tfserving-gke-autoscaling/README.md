@@ -82,7 +82,7 @@ kubectl apply -f tf-serving/tfserving-service.yaml
 Get the external address for the TF Serving service
 
 ```
-kubectl get svc tf-serving
+kubectl get svc image-classifier
 ```
 
 Verify that the model is up and operational.
@@ -94,7 +94,7 @@ curl -d @locust/request-body.json -X POST http://[EXTERNAL_IP]:8501/v1/models/im
 Configure Horizontal Pod Autoscaler.
 
 ```
-kubectl autoscale deployment tf-serving --cpu-percent=60 --min=1 --max=4
+kubectl autoscale deployment image-classifier --cpu-percent=60 --min=1 --max=4
 ```
 
 Check the status of the autoscaler.
@@ -115,7 +115,7 @@ locust -f tasks.py --headless --users 32 --spawn-rate 1 --step-load --step-users
 Observe the TF Serving Deployment in GKE dashboard.
 
 ```
-https://console.cloud.google.com/kubernetes/deployment/us-central1-f/lab1-cluster/default/tf-serving/overview
+https://console.cloud.google.com/kubernetes/deployment/us-central1-f/lab1-cluster/default/image-classifier/overview
 ```
 
 Observe the default node-pool
