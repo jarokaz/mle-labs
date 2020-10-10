@@ -75,44 +75,41 @@ kubectl get pods -n istio-system
 
 ## Deploying ResNet models
 
-
-
-## Deploying Locust load testing tool
-
-Build a docker image with Locust runtime, scripts, and configurations.
+Update and create the ConfigMap with the location of ResNet50 and ResNet101 SavedModels
 
 ```
-docker build -t gcr.io/$PROJECT_ID/locust locust/locust-image
+kubectl apply -f tf-serving/tfserving-configmap.yaml
 ```
 
-Deploy Locust to your GKE cluster
+Create deployments for ResNet101 and ResNet50 models.
 
 ```
-docker push gcr.io/$PROJECT_ID/locust
+kubectl apply -f tf-serving/tfserving-deployment.yaml
 ```
 
-Update the `newName` field in the `images` section of the `locust/manifests/kustomization.yaml` file with the name of your image - `gcr.io/<YOUR_PROJECT_ID>/locust:latest`.
-
-Deploy Locust.
+Create the service that load balances between both models
 
 ```
-kubectl apply -k locust/manifests
+kubectl apply -f tf-serving/tfserving-service.yaml
 ```
 
-## Deploying TF Serving with two versions of ResNet101 model
+Verify that the services load balances between both ResNet50 and ResNet101 pods
+```
+TBD
+```
 
-Create a GKE node pool for TF Serving.
+Get the external address for the image classifier service.
 
 ```
-NODE_POOL_NAME=tf-serving
-
-gcloud container node-pools create $NODE_POOL_NAME \
---cluster $CLUSTER_NAME \
---zone $ZONE \
---machine-type n1-standard-4 \
---enable-autoscaling \
---min-nodes 1 \
---max-nodes 3 \
---num-nodes 1
+kubectl get svc image-classifier
 ```
+
+Submit the request to the service
+
+```
+curl -d @locust/request-body.json -X POST http://[EXTERNAL_IP]:8501/v1/models/image_classifier:predict
+```
+
+Repeat a few times. Notice that not all the responses are the same. This is due to load balancing between different models.
+
 
