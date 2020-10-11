@@ -14,10 +14,10 @@ spec:
         subset: resnet50
         port:
           number: 8501
-      weight: 80
+      weight: 70
     - destination:
         host: image-classifier
         subset: resnet101
         port:
           number: 8501
-      weight: 20
+      weight: 30
