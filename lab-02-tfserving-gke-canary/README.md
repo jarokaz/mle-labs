@@ -151,8 +151,48 @@ Verify that the `image-classifier` service is operational
 kubectl get svc image-classifier -o wide
 ```
 
+Create Istio Gateway that accepts calls from any hosts.
+
+```
+kubectl apply -f tf-serving/gateway.yaml
+```
+
+Create a destination rule that defines named service subsets for the `image-classifier` service.
+
+```
+kubectl apply -f tf-serving/destinationrule.yaml
+```
+
+Create a virtual service that distributes 90% of traffic to ResNet50 and 10% of traffic to ResNet101.
 
 
+```
+kubectl apply -f tf-serving/virtualservice-weight-routing.yaml
+```
 
+### Test the service
 
+Check the configuration of the Istio Ingress Gateway
+
+```
+kubectl get svc istio-ingressgateway -n istio-system
+```
+
+Set the Ingress IP and ports
+
+```
+export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].port}')
+```
+
+Set the gateway URL
+```
+export GATEWAY_URL=$INGRESS_HOST:$INGRESS_PORT
+```
+
+Send a request to the service.
+
+```
+curl -d @locust/request-body.json -X POST http://$GATEWAY_URL/v1/models/image_classifier:predict
+```
 
