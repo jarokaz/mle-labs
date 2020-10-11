@@ -42,7 +42,7 @@ gcloud beta container clusters create $CLUSTER_NAME \
   --addons=Istio \
   --istio-config=auth=MTLS_PERMISSIVE \
   --cluster-version=latest \
-  --machine-type=n1-standard-4 \
+  --machine-type=n1-standard-8 \
   --num-nodes=3 
 
 ```
@@ -78,38 +78,81 @@ kubectl get pods -n istio-system
 Update and create the ConfigMap with the location of ResNet50 and ResNet101 SavedModels
 
 ```
-kubectl apply -f tf-serving/tfserving-configmap.yaml
+kubectl apply -f tf-serving/configmap.yaml
 ```
 
 Create deployments for ResNet101 and ResNet50 models.
 
 ```
-kubectl apply -f tf-serving/tfserving-deployment.yaml
+kubectl apply -f tf-serving/deployments.yaml
 ```
 
-Create the service that load balances between both models
+Verify that the deployments are operational. You may need to wait a little bit before the pods are in the READY state. Note that each deployment has one pod and that the pod contains one container - `tf-serving`.
 
 ```
-kubectl apply -f tf-serving/tfserving-service.yaml
+kubectl get deployments -o wide
 ```
 
-Verify that the services load balances between both ResNet50 and ResNet101 pods
+Create the service that exposes an external load balancer to the model deployments.
+
 ```
-TBD
+kubectl apply -f tf-serving/service-loadbalancer.yaml
 ```
 
-Get the external address for the image classifier service.
+Navigate to `https://console.cloud.google.com/kubernetes/service/us-central1-f/lab2-cluster/default/image-classifier/overview` to verify that the service load balances between pods from both deployments by checking the **Serving pods** section of the page. You should see two pods with the names starting with `image-classifier-resnet101` and `image-classifier-resnet50`.
+
+
+Get the external address for the image classifier service. It may take a couple of minutes before the external IP has been provisioned.
 
 ```
 kubectl get svc image-classifier
 ```
 
-Submit the request to the service
+Submit the request to the service.
+
 
 ```
 curl -d @locust/request-body.json -X POST http://[EXTERNAL_IP]:8501/v1/models/image_classifier:predict
 ```
 
-Repeat a few times. Notice that not all the responses are the same. This is due to load balancing between different models.
+
+Repeat a few times. Notice that the responses differ between calls. This is due to load balancing between different models.
+
+## Configuring Istio
+
+### Inject Istio side cars 
+
+```
+istioctl kube-inject -f tf-serving/deployments.yaml | kubectl apply -f -
+```
+
+Verify that pods in both deployments contain two containers: `tf-serving` and `istio-proxy`.
+
+```
+kubectl get deployments -o wide
+```
+
+
+### Configure Istio Gateway
+
+We will be accessing the deployments through Istio Gateway.
+
+Change the `image-classifier` service type from **LoadBalancer** to **ClusterIP**.
+
+
+```
+kubectl delete -f tf-serving/service-loadbalancer.yaml
+kubectl apply -f tf-serving/service.yaml
+```
+
+Verify that the `image-classifier` service is operational
+
+```
+kubectl get svc image-classifier -o wide
+```
+
+
+
+
 
 

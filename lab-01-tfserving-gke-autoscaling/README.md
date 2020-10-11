@@ -63,20 +63,20 @@ Notice that the cluster has only one node.
 Update and create the ConfigMap with the resnet_serving model location.
 
 ```
-kubectl apply -f tf-serving/tfserving-configmap.yaml
+kubectl apply -f tf-serving/configmap.yaml
 ```
 
 Create TF Serving Deployment.
 
 ```
-kubectl apply -f tf-serving/tfserving-deployment.yaml
+kubectl apply -f tf-serving/deployment.yaml
 ```
 
 
 Create  TF Serving Service.
 
 ```
-kubectl apply -f tf-serving/tfserving-service.yaml
+kubectl apply -f tf-serving/service.yaml
 ```
 
 Get the external address for the TF Serving service

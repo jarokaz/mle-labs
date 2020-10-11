@@ -67,18 +67,18 @@ metadata:
   namespace: default
   labels:
     app: image-classifier
-    version: resnet101
+    version: resnet50
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: image-classifier
-      version: resnet101
+      version: resnet50
   template:
     metadata:
       labels:
         app: image-classifier
-        version: resnet101
+        version: resnet50
     spec:
       containers:
       - name: tf-serving
