@@ -163,7 +163,7 @@ Create a destination rule that defines named service subsets for the `image-clas
 kubectl apply -f tf-serving/destinationrule.yaml
 ```
 
-Create a virtual service that distributes 90% of traffic to ResNet50 and 10% of traffic to ResNet101.
+Create a virtual service that distributes 70% of traffic to ResNet50 and 30% of traffic to ResNet101.
 
 
 ```
@@ -195,4 +195,6 @@ Send a request to the service.
 ```
 curl -d @locust/request-body.json -X POST http://$GATEWAY_URL/v1/models/image_classifier:predict
 ```
+
+Repeat a few times. Notice that more responses come from ResNet50. 
 
