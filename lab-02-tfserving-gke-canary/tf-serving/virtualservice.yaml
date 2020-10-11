@@ -8,21 +8,9 @@ spec:
   gateways:
   - image-classifier-gateway
   http:
-  - match:
-    - headers:
-        user-group:
-          exact: canary
-    route:
-      - destination:
-          host: image-classifier
-          subset: resnet101
-          port:
-            number: 8501
   - route:
     - destination:
         host: image-classifier
-        subset: resnet50
         port:
           number: 8501
-      
-    
+

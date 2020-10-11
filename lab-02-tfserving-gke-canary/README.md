@@ -1,4 +1,4 @@
-# Progressive delivery of TF Serving deployments  with GKE and Istio
+# Canary releases of ML models using GKE and Istio
 
 ## Introduction
 
@@ -15,7 +15,7 @@ This lab shows you how to use Istio on Kubernetes Engine to facilitate progressi
 
 ### Activate Cloud Shell
 
-## Set up your GKE cluster
+## Setting up your GKE cluster
 
 
 Set the project ID
@@ -73,83 +73,47 @@ Ensure that the corresponding Kubernetes Pods are deployed and all containers ar
 kubectl get pods -n istio-system
 ```
 
-## Deploying ResNet models
-
-Update and create the ConfigMap with the location of ResNet50 and ResNet101 SavedModels
+### Configuring automatic sidecar injection
 
 ```
-kubectl apply -f tf-serving/configmap.yaml
+kubectl label namespace default istio-injection=enabled
 ```
 
-Create deployments for ResNet101 and ResNet50 models.
+## Deploying ResNet50.
+
+In our scenario ResNet50 is a current production model.
+
+Update and create the ConfigMap with the location of the ResNet50 SavedModel.
 
 ```
-kubectl apply -f tf-serving/deployments.yaml
+kubectl apply -f tf-serving/configmap-resnet50.yaml
 ```
 
-Verify that the deployments are operational. You may need to wait a little bit before the pods are in the READY state. Note that each deployment has one pod and that the pod contains one container - `tf-serving`.
+Deploy ResNet50 model using TF Serving.
 
 ```
-kubectl get deployments -o wide
+kubectl apply -f tf-serving/deployment-resnet50.yaml
 ```
 
-Create the service that exposes an external load balancer to the model deployments.
+Show containers in the pod 
 
 ```
-kubectl apply -f tf-serving/service-loadbalancer.yaml
+TBD
 ```
 
-Navigate to `https://console.cloud.google.com/kubernetes/service/us-central1-f/lab2-cluster/default/image-classifier/overview` to verify that the service load balances between pods from both deployments by checking the **Serving pods** section of the page. You should see two pods with the names starting with `image-classifier-resnet101` and `image-classifier-resnet50`.
+Notice that the pod contains two containers: `tf-serving` and `istio-proxy`
 
-
-Get the external address for the image classifier service. It may take a couple of minutes before the external IP has been provisioned.
-
-```
-kubectl get svc image-classifier
-```
-
-Submit the request to the service.
-
+Create the service that provides access to the deployment.
 
 ```
-curl -d @locust/request-body.json -X POST http://[EXTERNAL_IP]:8501/v1/models/image_classifier:predict
-```
-
-
-Repeat a few times. Notice that the responses differ between calls. This is due to load balancing between different models.
-
-## Configuring Istio
-
-### Inject Istio side cars 
-
-```
-istioctl kube-inject -f tf-serving/deployments.yaml | kubectl apply -f -
-```
-
-Verify that pods in both deployments contain two containers: `tf-serving` and `istio-proxy`.
-
-```
-kubectl get deployments -o wide
-```
-
-
-### Configure Istio Gateway
-
-We will be accessing the deployments through Istio Gateway.
-
-Change the `image-classifier` service type from **LoadBalancer** to **ClusterIP**.
-
-
-```
-kubectl delete -f tf-serving/service-loadbalancer.yaml
 kubectl apply -f tf-serving/service.yaml
 ```
 
-Verify that the `image-classifier` service is operational
 
-```
-kubectl get svc image-classifier -o wide
-```
+
+
+### Configure access to the model through Istio Ingress gateway
+
 
 Create Istio Gateway that accepts calls from any hosts.
 
@@ -157,17 +121,12 @@ Create Istio Gateway that accepts calls from any hosts.
 kubectl apply -f tf-serving/gateway.yaml
 ```
 
-Create a destination rule that defines named service subsets for the `image-classifier` service.
 
-```
-kubectl apply -f tf-serving/destinationrule.yaml
-```
-
-Create a virtual service that distributes 70% of traffic to ResNet50 and 30% of traffic to ResNet101.
+Create a virtual service that routes the traffic to all deployments labeled `image-classifier`. At this point this will only be the ResNet50 deployment.
 
 
 ```
-kubectl apply -f tf-serving/virtualservice-weight-routing.yaml
+kubectl apply -f tf-serving/virtualservice.yaml
 ```
 
 ### Test the service
@@ -196,5 +155,110 @@ Send a request to the service.
 curl -d @locust/request-body.json -X POST http://$GATEWAY_URL/v1/models/image_classifier:predict
 ```
 
-Repeat a few times. Notice that more responses come from ResNet50. 
+Note that the model ranked the `military uniform` label with the highest probability of around 45%.
+
+## Deploying ResNet101 model as a Canary release
+
+### Prepare Istio for Canary routing
+Let's now deploy **ResNet101** model as a canary release of the image classifier service.
+
+Start by creating  destination rule that defines named service subsets for the image-classifier service.
+One subset will reference the ResNet50 deployment the other the ResNet101 deployment.
+
+```
+kubectl apply -f tf-serving/destinationrule.yaml
+```
+
+Reconfigure the virtual service to route 100% traffic to the ResNet50 subset and 0% traffic to the ResNet100 subset.
+
+```
+kubectl apply -f tf-serving/virtualservice-weight-100.yaml
+```
+
+
+Invoke the service. 
+
+```
+curl -d @locust/request-body.json -X POST http://$GATEWAY_URL/v1/models/image_classifier:predict
+```
+
+Repeat a few times. Note that the requests continue to be routed to the ResNet50 model.
+
+### Deploy ResNet101
+
+
+Update and create the ConfigMap with the location of the ResNet101 SavedModel.
+
+```
+kubectl apply -f tf-serving/configmap-resnet101.yaml
+```
+
+Deploy ResNet50 model using TF Serving.
+
+```
+kubectl apply -f tf-serving/deployment-resnet101.yaml
+```
+ 
+Wait for the deployment to come live.
+
+```
+kubectl get deployments -o wide
+```
+
+The ResNet101 deployment is ready but the virtual service is still routing all requests to ResNet50.
+
+Verify but sending a few requests to the service.
+
+```
+curl -d @locust/request-body.json -X POST http://$GATEWAY_URL/v1/models/image_classifier:predict
+```
+
+We are still getting the same response.
+
+### Reconfigure Istio to split traffic between ResNet50 and ResNet101
+
+Modify the virtual service to route 70% requests to ResNet50 and 30% to ResNet101
+
+```
+kubectl apply -f tf-serving/virtualservice-weight-70.yaml
+```
+
+Send a few more requests - more than 10
+
+```
+curl -d @locust/request-body.json -X POST http://$GATEWAY_URL/v1/models/image_classifier:predict
+```
+
+Notice that some responses are now different. The probability assigned to the `military uniform` label is around 94%.
+These are the responses from the Canary ResNet101 release.
+
+
+As an optional task please reconfigure the virtual service to route 100% traffic to the ResNet101 model.
+
+### Configuring focused canary testing.
+
+In the previous steps you learned how to control fine-grained traffic percentages. 
+Istio routing rules allow for much more sophisticated canary testing scenarios.
+
+In this section, you will reconfigure the `image-classifier` virtual service to route traffic to the canary deployment based on request host headers.
+This approach allows a variety scenarios, including allocate a subset of users to canary testing.
+Let's assume that the request from the canary users will carry a custom header `user-group`. If this header is set to `canary` the request will be routed to ResNet101.
+
+```
+kubectl apply -f tf-serving/virtualservice-focused-routing.yaml
+```
+
+Send a few requests without the `user-group` header.
+
+```
+curl -d @locust/request-body.json -X POST http://$GATEWAY_URL/v1/models/image_classifier:predict
+```
+
+Now send a few requests with the `user-group` header set to `canary`.
+
+
+```
+curl -d @locust/request-body.json -H "user-group: canary" -X POST http://$GATEWAY_URL/v1/models/image_classifier:predict
+```
+
 

@@ -15,8 +15,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: tfserving-configs
+  name: resnet101-configs
 data:
   MODEL_NAME: image_classifier
-  RESNET50_PATH: gs://labs-workspace/models/resnet_50
-  RESNET101_PATH: gs://labs-workspace/models/resnet_101
+  MODEL_PATH: gs://labs-workspace/models/resnet_101
