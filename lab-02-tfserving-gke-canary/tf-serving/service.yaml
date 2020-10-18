@@ -13,9 +13,21 @@
 # limitations under the License.
 
 apiVersion: v1
-kind: ConfigMap
+kind: Service
 metadata:
-  name: tfserving-configs
-data:
-  MODEL_NAME: resnet_serving
-  MODEL_PATH: gs://labs-workspace/models/resnet_serving
+  name: image-classifier
+  namespace: default
+  labels:
+    app: image-classifier
+    service: image-classifier
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8500
+    protocol: TCP
+    name: tf-serving-grpc
+  - port: 8501
+    protocol: TCP
+    name: tf-serving-http
+  selector:
+    app: image-classifier

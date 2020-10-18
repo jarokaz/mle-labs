@@ -12,7 +12,7 @@ the CPU utilization metrics.
 Set the default compute zone
 
 ```
-PROJECT_ID=mlops-dev-env
+PROJECT_ID=jk-mlops-dev
 gcloud config set project $PROJECT_ID
 gcloud config set compute/zone us-central1-f
 ```
@@ -23,7 +23,7 @@ To create a new cluster with 3 nodes in the default node pool, run the following
 
 
 ```
-CLUSTER_NAME=tfserving-cluster
+CLUSTER_NAME=lab1-cluster
 
 gcloud beta container clusters create $CLUSTER_NAME \
   --cluster-version=latest \
@@ -63,38 +63,38 @@ Notice that the cluster has only one node.
 Update and create the ConfigMap with the resnet_serving model location.
 
 ```
-kubectl apply -f tf-serving/tfserving-configmap.yaml
+kubectl apply -f tf-serving/configmap.yaml
 ```
 
 Create TF Serving Deployment.
 
 ```
-kubectl apply -f tf-serving/tfserving-deployment.yaml
+kubectl apply -f tf-serving/deployment.yaml
 ```
 
 
 Create  TF Serving Service.
 
 ```
-kubectl apply -f tf-serving/tfserving-service.yaml
+kubectl apply -f tf-serving/service.yaml
 ```
 
 Get the external address for the TF Serving service
 
 ```
-kubectl get svc tf-serving
+kubectl get svc image-classifier
 ```
 
 Verify that the model is up and operational.
 
 ```
-curl -d @locust/request-body.json -X POST http://[EXTERNAL_IP]:8501/v1/models/resnet_serving:predict
+curl -d @locust/request-body.json -X POST http://[EXTERNAL_IP]:8501/v1/models/image_classifier:predict
 ```
 
 Configure Horizontal Pod Autoscaler.
 
 ```
-kubectl autoscale deployment tf-serving --cpu-percent=60 --min=1 --max=4
+kubectl autoscale deployment image-classifier --cpu-percent=60 --min=1 --max=4
 ```
 
 Check the status of the autoscaler.
@@ -115,11 +115,11 @@ locust -f tasks.py --headless --users 32 --spawn-rate 1 --step-load --step-users
 Observe the TF Serving Deployment in GKE dashboard.
 
 ```
-https://console.cloud.google.com/kubernetes/deployment/us-central1-f/tfserving-cluster/default/tf-serving/overview
+https://console.cloud.google.com/kubernetes/deployment/us-central1-f/lab1-cluster/default/image-classifier/overview
 ```
 
 Observe the default node-pool
 
 ```
-https://console.cloud.google.com/kubernetes/nodepool/us-central1-f/tfserving-cluster/default-pool
+https://console.cloud.google.com/kubernetes/nodepool/us-central1-f/lab1-cluster/default-pool
 ```
