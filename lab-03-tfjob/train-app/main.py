@@ -6,9 +6,10 @@ import tensorflow as tf
 import mnist
 
 per_worker_batch_size = 64
-#tf_config = json.loads(os.environ['TF_CONFIG'])
-#num_workers = len(tf_config['cluster']['worker'])
 num_workers = 1
+if 'TF_CONFIG' in os.environ:
+    tf_config = json.loads(os.environ['TF_CONFIG'])
+    num_workers = len(tf_config['cluster']['worker'])
 
 strategy = tf.distribute.experimental.MultiWorkerMirroredStrategy()
 

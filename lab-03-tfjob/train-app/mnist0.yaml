@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mnist0
+spec:
+  containers:
+  - image: gcr.io/jk-mlops-dev/mnist
+    name: mnist
+    env:
+    - name: TF_CONFIG
+      value: '{"cluster": {"worker": ["localhost:12345", "localhost:23456"]}, "task": {"type": "worker","index": 0}}'

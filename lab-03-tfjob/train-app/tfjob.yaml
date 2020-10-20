@@ -1,0 +1,15 @@
+apiVersion: kubeflow.org/v1
+kind: TFJob
+metadata:
+  name: multi-worker
+spec:
+  cleanPodPolicy: None
+  tfReplicaSpecs:
+    Worker:
+      replicas: 2
+      restartPolicy: Never
+      template:
+        spec:
+          containers:
+            - name: tensorflow
+              image: gcr.io/jk-mlops-dev/mnist
