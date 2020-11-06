@@ -14,7 +14,7 @@
 Set the project ID
 
 ```
-PROJECT_ID=jk-mlops-dev
+PROJECT_ID=$(gcloud config get-value project)
 gcloud config set project $PROJECT_ID
 gcloud config set compute/zone us-central1-f
 ```
