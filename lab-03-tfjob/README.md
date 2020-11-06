@@ -77,6 +77,10 @@ kubectl create namespace kubeflow
 kubectl apply  --kustomize tf-training/tf-job-operator/base
 ```
 
+### Verify installation
+```
+kubectl get pods -n kubeflow
+```
 
 ## Running and monitoring distributed jobs
 
