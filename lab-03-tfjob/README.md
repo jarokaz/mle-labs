@@ -84,6 +84,14 @@ kubectl get pods -n kubeflow
 
 ## Running and monitoring distributed jobs
 
+### Copy lab files
+
+```
+SRC_REPO=https://github.com/jarokaz/mle-labs
+kpt pkg get $SRC_REPO/lab-03-tfjob lab-files
+cd lab-files
+```
+
 ### Build a training container
 ```
 cd train-app
