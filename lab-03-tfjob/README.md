@@ -56,6 +56,7 @@ gcloud container clusters get-credentials $CLUSTER_NAME
 
 Get the manifests for TensorFlow Training from v1.1.0 of Kubeflow.
 ```
+SRC_REPO=https://github.com/kubeflow/manifests
 kpt pkg get $SRC_REPO/tf-training@v1.1.0 tf-training
 ```
 
