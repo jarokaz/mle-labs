@@ -113,6 +113,15 @@ kubectl apply -f tfjob.yaml
 kubectl describe tfjob multi-worker
 ```
 
+```
+kubectl --follow logs multi-worker-worker-0
+```
+
+```
+kubectl get pods
+```
+
+
 ### Delete the job
 ```
 kubectl delete tfjob multi-worker
