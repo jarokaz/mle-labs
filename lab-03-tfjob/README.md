@@ -100,6 +100,17 @@ docker build -t gcr.io/${PROJECT_ID}/${IMAGE_NAME} .
 docker push gcr.io/${PROJECT_ID}/${IMAGE_NAME}
 ```
 
+Verify that the image was pushed successfully
+
+```
+gcloud container images list
+```
+
+### Update the TFJob manifest
+```
+IMAGE=<YOUR IMAGE NAME>
+yq w tfjob.yaml 'spec.tfReplicaSpecs.Worker.template.spec.containers[0].image' $IMAGE
+```
 ### Submit a training job
 ```
 cd ..
