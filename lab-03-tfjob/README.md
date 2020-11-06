@@ -95,7 +95,6 @@ cd lab-files
 ### Build a training container
 ```
 cd train-app
-PROJECT_ID=$(gcloud config get-value project)
 IMAGE_NAME=mnist-train
 
 docker build -t gcr.io/${PROJECT_ID}/${IMAGE_NAME} .
