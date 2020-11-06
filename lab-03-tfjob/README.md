@@ -29,7 +29,7 @@ gcloud beta container clusters create $CLUSTER_NAME \
   --project=$PROJECT_ID \
   --cluster-version=latest \
   --machine-type=n1-standard-8 \
-  --num-nodes=2
+  --num-nodes=3
 
 ```
 
