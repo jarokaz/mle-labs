@@ -114,7 +114,7 @@ kubectl describe tfjob multi-worker
 ```
 
 ```
-kubectl --follow logs multi-worker-worker-0
+kubectl logs --follow multi-worker-worker-0
 ```
 
 ```
