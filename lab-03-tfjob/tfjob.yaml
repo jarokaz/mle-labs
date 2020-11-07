@@ -6,10 +6,16 @@ spec:
   cleanPodPolicy: None
   tfReplicaSpecs:
     Worker:
-      replicas: 2
-      restartPolicy: Never
+      replicas: 3
+ #     restartPolicy: Never
       template:
         spec:
           containers:
             - name: tensorflow
-              image: gcr.io/jk-mlops-dev/mnist
+              image: gcr.io/jk-mlops-dev/mnist-train:latest
+              args:
+                - --epochs=3
+                - --steps_per_epoch=100
+                - --per_worker_batch=64
+                - --saved_model_path=gs://jk-tfjob/saved_model_dir
+                - --checkpoint_path=gs://jk-tfjob/checkpoints
