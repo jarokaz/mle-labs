@@ -27,14 +27,14 @@ BUFFER_SIZE = 100000
 
 
 def _scale(image, label):
-    """Scales MNIST data for [0.-1.]"""
+    """Scales an image tensor."""
     image = tf.cast(image, tf.float32)
     image /= 255
     return image, label
 
 
 def _is_chief(task_type, task_id):
-    """Determines if the replica is the Chief"""
+    """Determines if the replica is the Chief."""
     return task_type is None or task_type == 'chief' or (
         task_type == 'worker' and task_id == 0) 
 
@@ -47,25 +47,19 @@ def _get_saved_model_dir(base_path, task_type, task_id):
         temp_dir = os.path.join('/tmp', task_type, str(task_id))
         tf.io.gfile.makedirs(temp_dir)
         saved_model_path = temp_dir
-        
-    #temp_dir = os.path.join('/tmp', task_type, str(task_id))
-    #tf.io.gfile.makedirs(temp_dir)
-    #saved_model_path = temp_dir
 
     return saved_model_path
 
 
 def train(epochs, steps_per_epoch, per_worker_batch, checkpoint_path, saved_model_path):
-    """Trains an MNIST model using multi-worker mirrored strategy."""
+    """Trains a MNIST classification model using multi-worker mirrored strategy."""
 
     strategy = tf.distribute.experimental.MultiWorkerMirroredStrategy()
     global_batch_size = per_worker_batch * strategy.num_replicas_in_sync
     task_type = strategy.cluster_resolver.task_type
     task_id = strategy.cluster_resolver.task_id
-    saved_model_dir = _get_saved_model_dir(saved_model_path, task_type, task_id)
 
     with strategy.scope():
-        # Prepare the MNIST dataset for multi-worker training
         datasets, _ = tfds.load(name='mnist', with_info=True, as_supervised=True)
         dataset = datasets['train'].map(_scale).cache().shuffle(BUFFER_SIZE).batch(global_batch_size).repeat()
         options = tf.data.Options()
@@ -83,7 +77,7 @@ def train(epochs, steps_per_epoch, per_worker_batch, checkpoint_path, saved_mode
                            steps_per_epoch=steps_per_epoch,
                            callbacks=callbacks)
 
-    print('******************* Saving to: ', saved_model_dir)
+    saved_model_dir = _get_saved_model_dir(saved_model_path, task_type, task_id)
     multi_worker_model.save(saved_model_dir)
 
 if __name__ == '__main__':
@@ -114,15 +108,5 @@ if __name__ == '__main__':
 
   args = parser.parse_args()
 
-  print(tf.__version__)
-
-  #saved_model_path = args.saved_model_path
-  #tf_config = json.loads(os.environ.get('TF_CONFIG') or '{}')
-  #if tf_config:
-  #    task_index = tf_config['task']['index']
-  #    if task_index != 0:
-  #        saved_model_path = None
-  #        #saved_model_path = saved_model_path + '/{}'.format(task_index)
-  
   train(args.epochs, args.steps_per_epoch, args.per_worker_batch, 
       args.checkpoint_path, args.saved_model_path)
