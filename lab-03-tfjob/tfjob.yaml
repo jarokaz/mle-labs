@@ -11,7 +11,7 @@ spec:
         spec:
           containers:
             - name: tensorflow
-              image: gcr.io/jk-mlops-dev/mnist-train:latest
+              image: mnist
               args:
                 - --epochs=5
                 - --steps_per_epoch=100
