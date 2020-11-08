@@ -82,6 +82,14 @@ kubectl apply  --kustomize tf-training/tf-job-operator/base
 kubectl get pods -n kubeflow
 ```
 
+## Create a GCS bucket for checkpoints and SavedModel
+
+```
+export TFJOB_BUCKET=<YOUR_BUCKET_NAME>
+
+gsutil mb gs://${TFJOB_BUCKET}
+```
+
 ## Running and monitoring distributed jobs
 
 ### Copy lab files
