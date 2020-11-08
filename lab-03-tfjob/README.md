@@ -117,6 +117,8 @@ gcloud container images list
 ### Update the TFJob manifest
 ```
 yq w -i tfjob.yaml 'spec.tfReplicaSpecs.Worker.template.spec.containers[0].image' gcr.io/${PROJECT_ID}/${IMAGE_NAME}
+yq w -i tfjob.yaml 'spec.tfReplicaSpecs.Worker.template.spec.containers[0].args[3]' ${TFJOB_BUCKET}/saved_model_dir
+yq w -i  tfjob.yaml 'spec.tfReplicaSpecs.Worker.template.spec.containers[0].args[3]' ${TFJOB_BUCKET}/checkpoints
 ```
 ### Submit a training job
 ```
