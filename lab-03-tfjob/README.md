@@ -112,7 +112,6 @@ yq w -i tfjob.yaml 'spec.tfReplicaSpecs.Worker.template.spec.containers[0].image
 ```
 ### Submit a training job
 ```
-cd ..
 kubectl apply -f tfjob.yaml
 ```
 
