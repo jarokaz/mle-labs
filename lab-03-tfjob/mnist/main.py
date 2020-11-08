@@ -17,11 +17,12 @@
 
 import argparse
 import json
+import logging
 import os
 
 import tensorflow_datasets as tfds
 import tensorflow as tf
-import mnist
+import mnist.model as mnist
 
 BUFFER_SIZE = 100000
 
@@ -77,11 +78,14 @@ def train(epochs, steps_per_epoch, per_worker_batch, checkpoint_path, saved_mode
                            steps_per_epoch=steps_per_epoch,
                            callbacks=callbacks)
 
+    
+    logging.info("Saving the trained model to: {}".format(saved_model_path))
     saved_model_dir = _get_saved_model_dir(saved_model_path, task_type, task_id)
     multi_worker_model.save(saved_model_dir)
 
 if __name__ == '__main__':
 
+  logging.getLogger().setLevel(logging.INFO)
   tfds.disable_progress_bar()
 
   parser = argparse.ArgumentParser()
