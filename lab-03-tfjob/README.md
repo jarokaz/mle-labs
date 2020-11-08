@@ -94,7 +94,6 @@ cd lab-files
 
 ### Build a training container
 ```
-cd train-app
 IMAGE_NAME=mnist-train
 
 docker build -t gcr.io/${PROJECT_ID}/${IMAGE_NAME} .
