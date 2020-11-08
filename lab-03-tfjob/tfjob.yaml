@@ -16,5 +16,5 @@ spec:
                 - --epochs=5
                 - --steps_per_epoch=100
                 - --per_worker_batch=64
-                - --saved_model_path=gs://jk-tfjob/saved_model_dir
-                - --checkpoint_path=gs://jk-tfjob/checkpoints
+                - --saved_model_path=gs://bucket/saved_model_dir
+                - --checkpoint_path=gs://bucket/checkpoints
