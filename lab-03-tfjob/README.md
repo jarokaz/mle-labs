@@ -108,8 +108,7 @@ gcloud container images list
 
 ### Update the TFJob manifest
 ```
-IMAGE=<YOUR IMAGE NAME>
-yq w tfjob.yaml 'spec.tfReplicaSpecs.Worker.template.spec.containers[0].image' $IMAGE
+yq w tfjob.yaml 'spec.tfReplicaSpecs.Worker.template.spec.containers[0].image' gcr.io/${PROJECT_ID}/${IMAGE_NAME}
 ```
 ### Submit a training job
 ```
