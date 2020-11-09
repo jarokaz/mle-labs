@@ -56,9 +56,9 @@ def train(epochs, steps_per_epoch, per_worker_batch, checkpoint_path, saved_mode
     """Trains a MNIST classification model using multi-worker mirrored strategy."""
 
     strategy = tf.distribute.experimental.MultiWorkerMirroredStrategy()
-    global_batch_size = per_worker_batch * strategy.num_replicas_in_sync
     task_type = strategy.cluster_resolver.task_type
     task_id = strategy.cluster_resolver.task_id
+    global_batch_size = per_worker_batch * strategy.num_replicas_in_sync
 
     with strategy.scope():
         datasets, _ = tfds.load(name='mnist', with_info=True, as_supervised=True)
