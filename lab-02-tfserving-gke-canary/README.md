@@ -1,264 +1,334 @@
-# Canary releases of ML models using GKE and Istio
-
-## Introduction
-
-Istio is an open source framework for connecting, securing, and managing microservices, including services running on Google Kubernetes Engine (GKE). It lets you create a network of deployed services with load balancing, service-to-service authentication, monitoring, and more, without requiring any changes in service code.
-
-This lab shows you how to use Istio on Kubernetes Engine to facilitate progressive delivery of TensorFlow machine learning model served through TF Serving.
+# Implementing Canary Releases of TensorFlow Model Deployments with Kubernetes and Istio
 
 
+## GSP778
 
 
-## Setup and Requirements
-
-### Qwiklabs setup
-
-### Activate Cloud Shell
-
-## Setting up your GKE cluster
+![[/fragments/labmanuallogo]]
 
 
-Set the project ID
+## Overview
 
-```
-PROJECT_ID=jk-mlops-dev
-gcloud config set project $PROJECT_ID
-gcloud config set compute/zone us-central1-f
-```
 
-### Creating a Kubernetes cluster with Istio
 
-Set the name and the zone for your cluster
 
-```
-CLUSTER_NAME=lab2-cluster
-```
+AutoML Vision helps developers with limited ML expertise train high quality image recognition models. Once you upload images to the AutoML UI, you can train a model that will be immediately available on Google Cloud for generating predictions via an easy to use REST API.
 
-Create a GKE cluster with Istio enabled and with mTLS in permissive mode:
+In this lab you will upload images to Cloud Storage and use them to train a custom model to recognize different types of clouds (cumulus, cumulonimbus, etc.).
 
-```
-gcloud beta container clusters create $CLUSTER_NAME \
-  --project=$PROJECT_ID \
-  --addons=Istio \
-  --istio-config=auth=MTLS_PERMISSIVE \
-  --cluster-version=latest \
-  --machine-type=n1-standard-8 \
-  --num-nodes=3 
+#### __What you'll learn__
 
-```
+* Uploading a labeled dataset to Cloud Storage and connecting it to AutoML Vision with a CSV label file.
+* Training a model with AutoML Vision and evaluating its accuracy.
+* Generating predictions on your trained model.
 
-### Verifying the installation
 
-Check that the cluster is up and running
+## Setup and requirements
 
-```
-gcloud container clusters list
-```
 
-Get the credentials for you new cluster so you can interact with it using `kubectl`.
 
-```
-gcloud container clusters get-credentials $CLUSTER_NAME
-```
 
-Ensure the following Kubernetes services are deployed: `istio-citadel`, `istio-egressgateway`, `istio-pilot`, `istio-ingressgateway`, `istio-policy`, `istio-sidecar-injector`, and `istio-telemetry`
+### __Qwiklabs setup__
 
-```
-kubectl get service -n istio-system
-```
+![[/fragments/startqwiklab]]
 
-Ensure that the corresponding Kubernetes Pods are deployed and all containers are up and running: `istio-pilot-*`, `istio-policy-*`, `istio-telemetry-*`, `istio-egressgateway-*`, `istio-ingressgateway-*`, `istio-sidecar-injector-*`, and `istio-citadel-*`
+![[/fragments/gcpconsole]]
+
+
+
+## Set up AutoML Vision
+
+
+AutoML Vision provides an interface for all the steps in training an image classification model and generating predictions on it. Start by enabling the Cloud AutoML API.
+
+From the __Navigation menu__, select __APIs & Services__ > __Library__.
+
+In the search bar type in "Cloud AutoML". Click on the __Cloud AutoML API__ result and then click __Enable__.
+
+
+This will take a minute to set up.
+
+Now open this [AutoML UI](https://console.cloud.google.com/vision/datasets) link in a new browser.
+
+
+
+Click __Check my progress__ to verify the objective.
+
+<ql-activity-tracking step=1>
+    Enable the AutoML API
+</ql-activity-tracking>
+
+
+
+
+![[/fragments/cloudshell]]
+
+In Cloud Shell use the following commands to create environment variables for you Project ID and Username, replacing `<USERNAME>` with the User Name you logged into the lab with:
 
 ```
-kubectl get pods -n istio-system
+export PROJECT_ID=$DEVSHELL_PROJECT_ID
+```
+```
+export QWIKLABS_USERNAME=<USERNAME>
 ```
 
-### Configuring automatic sidecar injection
+Run the following command to give AutoML permissions:
 
 ```
-kubectl label namespace default istio-injection=enabled
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="user:$QWIKLABS_USERNAME" \
+    --role="roles/automl.admin"
 ```
 
-## Deploying ResNet50.
-
-In our scenario ResNet50 is a current production model.
-
-Update and create the ConfigMap with the location of the ResNet50 SavedModel.
+Now create a storage bucket by running the following:
 
 ```
-kubectl apply -f tf-serving/configmap-resnet50.yaml
+gsutil mb -p $PROJECT_ID \
+    -c standard    \
+    -l us-central1 \
+    gs://$PROJECT_ID-vcm/
 ```
 
-Deploy ResNet50 model using TF Serving.
+In the Google Cloud console, open the __Navigation menu__ and click on __Storage__ to see it.
 
+![b91e6a77309137cf.png](img/b91e6a77309137cf.png)
+
+
+Click __Check my progress__ to verify the objective.
+
+<ql-activity-tracking step=2>
+    Create a Cloud Storage Bucket
+</ql-activity-tracking>
+
+## Upload training images to Cloud Storage
+
+
+
+
+In order to train a model to classify images of clouds, you need to provide labeled training data so the model can develop an understanding of the image features associated with different types of clouds. In this example your model will learn to classify three different types of clouds: cirrus, cumulus, and cumulonimbus. To use AutoML Vision you need to put your training images in Cloud Storage.
+
+Before adding the cloud images, create an environment variable with the name of your bucket.
+
+Run the following command in Cloud Shell:
 ```
-kubectl apply -f tf-serving/deployment-resnet50.yaml
-```
-
-Show containers in the pod 
-
-```
-TBD
-```
-
-Notice that the pod contains two containers: `tf-serving` and `istio-proxy`
-
-Create the service that provides access to the deployment.
-
-```
-kubectl apply -f tf-serving/service.yaml
-```
-
-
-
-
-### Configure access to the model through Istio Ingress gateway
-
-
-Create Istio Gateway that accepts calls from any hosts.
-
-```
-kubectl apply -f tf-serving/gateway.yaml
+export BUCKET=$PROJECT_ID-vcm
 ```
 
+The training images are publicly available in a Cloud Storage bucket.
 
-Create a virtual service that routes the traffic to all deployments labeled `image-classifier`. At this point this will only be the ResNet50 deployment.
-
-
-```
-kubectl apply -f tf-serving/virtualservice.yaml
-```
-
-### Test the service
-
-Check the configuration of the Istio Ingress Gateway
+Use the `gsutil` command line utility for Cloud Storage to copy the training images into your bucket:
 
 ```
-kubectl get svc istio-ingressgateway -n istio-system
+gsutil -m cp -r gs://automl-codelab-clouds/* gs://${BUCKET}
 ```
 
-Set the Ingress IP and ports
+When the images finish copying, click the __Refresh__ button at the top of the Storage browser, then click on your bucket name. You should see 3 folders of photos for each of the 3 different cloud types to be classified:
+
+![autoML_bucket_folders.png](img/autoML_bucket_folders.png)
+
+If you click on the individual image files in each folder you can see the photos you'll be using to train your model for each type of cloud.
+
+
+
+## Create a dataset
+
+Now that your training data is in Cloud Storage, you need a way for AutoML Vision to access it. You'll create a CSV file where each row contains a URL to a training image and the associated label for that image. This CSV file has been created for you; you just need to update it with your bucket name.
+
+Run the following command to copy the file to your Cloud Shell instance:
 
 ```
-export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].port}')
+gsutil cp gs://automl-codelab-metadata/data.csv .
 ```
 
-Set the gateway URL
-```
-export GATEWAY_URL=$INGRESS_HOST:$INGRESS_PORT
-```
-
-Send a request to the service.
+Then update the CSV with the files in your project:
 
 ```
-curl -d @locust/request-body.json -X POST http://$GATEWAY_URL/v1/models/image_classifier:predict
+sed -i -e "s/placeholder/${BUCKET}/g" ./data.csv
 ```
 
-Note that the model ranked the `military uniform` label with the highest probability of around 45%.
-
-## Deploying ResNet101 model as a Canary release
-
-### Prepare Istio for Canary routing
-Let's now deploy **ResNet101** model as a canary release of the image classifier service.
-
-Start by creating  destination rule that defines named service subsets for the image-classifier service.
-One subset will reference the ResNet50 deployment the other the ResNet101 deployment.
+Now upload this file to your Cloud Storage bucket:
 
 ```
-kubectl apply -f tf-serving/destinationrule.yaml
+gsutil cp ./data.csv gs://${BUCKET}
 ```
 
-Reconfigure the virtual service to route 100% traffic to the ResNet50 subset and 0% traffic to the ResNet100 subset.
+Once that command completes, click the __Refresh__ button at the top of the Storage browser, then Click on your bucket name. Confirm that you see the `data.csv` file in your bucket.
 
-```
-kubectl apply -f tf-serving/virtualservice-weight-100.yaml
-```
+Navigate back to the [AutoML Vision](https://console.cloud.google.com/vision/datasets) tab. Your page should now resemble the following:
 
+![MLVision_nobeta.png](img/MLVision_nobeta.png)
 
-Invoke the service. 
+At the top of the console, click __+ NEW DATASET__.
 
-```
-curl -d @locust/request-body.json -X POST http://$GATEWAY_URL/v1/models/image_classifier:predict
-```
+Type "clouds" for the Dataset name.
 
-Repeat a few times. Note that the requests continue to be routed to the ResNet50 model.
-
-### Deploy ResNet101
+Select "Single-Label Classification".
 
 
-Update and create the ConfigMap with the location of the ResNet101 SavedModel.
+![mlvision-new-dataset.png](img/mlvision-new-dataset.png)
 
-```
-kubectl apply -f tf-serving/configmap-resnet101.yaml
-```
+<aside>
+In your own projects, you may want to use  [multi-class classification](https://cloud.google.com/vision/automl/docs/datasets).
+</aside>
 
-Deploy ResNet50 model using TF Serving.
+Click __Create Dataset__.
 
-```
-kubectl apply -f tf-serving/deployment-resnet101.yaml
-```
- 
-Wait for the deployment to come live.
+Choose __Select a CSV file on Cloud Storage__ and add the file name to the URL for the file you just uploaded - `gs://your-bucket-name/data.csv`
 
-```
-kubectl get deployments -o wide
-```
+An easy way to get this link is to go back to the Cloud Console, click on the `data.csv` file. Click on the __copy__ icon in the URI field.
 
-The ResNet101 deployment is ready but the virtual service is still routing all requests to ResNet50.
+![mlvision-select-file.png](img/mlvision-select-file.png)
 
-Verify but sending a few requests to the service.
-
-```
-curl -d @locust/request-body.json -X POST http://$GATEWAY_URL/v1/models/image_classifier:predict
-```
-
-We are still getting the same response.
-
-### Reconfigure Istio to split traffic between ResNet50 and ResNet101
-
-Modify the virtual service to route 70% requests to ResNet50 and 30% to ResNet101
-
-```
-kubectl apply -f tf-serving/virtualservice-weight-70.yaml
-```
-
-Send a few more requests - more than 10
-
-```
-curl -d @locust/request-body.json -X POST http://$GATEWAY_URL/v1/models/image_classifier:predict
-```
-
-Notice that some responses are now different. The probability assigned to the `military uniform` label is around 94%.
-These are the responses from the Canary ResNet101 release.
+Click __Continue__.
 
 
-As an optional task please reconfigure the virtual service to route 100% traffic to the ResNet101 model.
-
-### Configuring focused canary testing.
-
-In the previous steps you learned how to control fine-grained traffic percentages. 
-Istio routing rules allow for much more sophisticated canary testing scenarios.
-
-In this section, you will reconfigure the `image-classifier` virtual service to route traffic to the canary deployment based on request host headers.
-This approach allows a variety scenarios, including allocate a subset of users to canary testing.
-Let's assume that the request from the canary users will carry a custom header `user-group`. If this header is set to `canary` the request will be routed to ResNet101.
-
-```
-kubectl apply -f tf-serving/virtualservice-focused-routing.yaml
-```
-
-Send a few requests without the `user-group` header.
-
-```
-curl -d @locust/request-body.json -X POST http://$GATEWAY_URL/v1/models/image_classifier:predict
-```
-
-Now send a few requests with the `user-group` header set to `canary`.
+It will take 2 - 5 minutes for your images to import. Once the import has completed, you'll be brought to a page with all the images in your dataset.
 
 
-```
-curl -d @locust/request-body.json -H "user-group: canary" -X POST http://$GATEWAY_URL/v1/models/image_classifier:predict
-```
+Click __Check my progress__ to verify the objective.
+
+<ql-activity-tracking step=3>
+    Create a Dataset
+</ql-activity-tracking>
+
+## Inspect images
 
 
+After the import completes, click on the __Images__ tab to see the images you uploaded.
+
+![VisionAutoML_images.png](img/VisionAutoML_images.png)
+
+Try filtering by different labels in the left menu (i.e. click cumulus) to review the training images:
+
+<aside class="special"><p><strong>Note: </strong>If you were building a production model, you&#39;d want <em>at least</em> 100 images per label to ensure high accuracy. This is just a demo so only 20 images were used so the model could train quickly.</p>
+</aside>
+
+If any images are labeled incorrectly you can click on the image to switch the label:
+
+![mlvision-image-detail.png](img/mlvision-image-detail.png)
+
+To see a summary of how many images you have for each label, click on __LABEL STATS__ at the top of the page. You should see the following show up on the right side of your browser.
+
+![mlvision-label-stats.png](img/mlvision-label-stats.png)
+
+<aside class="special"><p><strong>Note: </strong>If you are working with a dataset that isn&#39;t already labeled, AutoML Vision provides an in-house <a href="https://cloud.google.com/vision/automl/docs/human-labeling"> human labeling service </a>.</p>
+</aside>
+
+
+## Train your model
+
+
+
+
+You're ready to start training your model! AutoML Vision handles this for you automatically, without requiring you to write any of the model code.
+
+To train your clouds model, go to the __Train__ tab and click __Start Training__.
+
+Enter a name for your model, or use the default auto-generated name.
+
+Leave __Cloud-hosted__ selected, then click __Continue__.
+
+Set the node hours set to __8__.
+
+![VisionAutoML_8nodehrs.png](img/VisionAutoML_8nodehrs.png)
+
+Click __Start Training__.
+
+
+Since this is a small dataset, it will only take around __25-30 minutes__ to complete.
+
+While you're waiting, you can watch this YouTube video on [preparing an image data in AutoML](https://youtu.be/_2eG8xpRYZ4) - the images should look familiar!
+
+
+## Evaluate your model
+
+In the __Evaluate__ tab, you'll see information about Precision and Recall of the model.
+
+![AutoML_precision_graph.png](img/AutoML_precision_graph.png)
+
+You can also play around with __Score threshold__.
+
+Finally, scroll down to take a look at the __Confusion matrix__.
+
+![AutoML_confusion.png](img/AutoML_confusion.png)
+
+All of this provides some common machine learning metrics to evaluate your model accuracy and see where you can improve your training data. Since the focus for this lab was not on accuracy, move on to the next section about predictions section. Feel free to browse the accuracy metrics on your own.
+
+
+## Generate predictions
+
+
+Now it's time for the most important part: generating predictions on your trained model using data it hasn't seen before.
+
+Navigate to the __Test & Use__ tab in the AutoML UI:
+
+![mlvision-test-n-use.png](img/mlvision-test-n-use.png)
+
+__Deploy model__ then __Deploy__.
+
+This will take around __20 minutes__ to deploy.
+
+## Generate predictions
+
+There are a few ways to generate predictions. In this lab you'll use the UI to upload images. You'll see how your model does classifying these two images (the first is a cirrus cloud, the second is a cumulonimbus).
+
+Download these images to your local machine by right-clicking on each of them:
+
+![a4e6d50183e83703.png](img/a4e6d50183e83703.png)
+
+![1d4aaa17ec62e9ba.png](img/1d4aaa17ec62e9ba.png)
+
+Return to the AutoML Vision UI, click __Upload Images__ and upload the clouds to the online prediction UI. When the prediction request completes you should see something like the following:
+
+![AutoML_cumulo.png](img/AutoML_cumulo.png)
+
+Click __Check my progress__ to verify the objective.
+
+<ql-activity-tracking step=4>
+    Run the pedictions
+</ql-activity-tracking>
+
+
+
+Pretty cool - the model classified each type of cloud correctly!
+
+
+
+## Congratulations!
+
+You've learned how to train your own custom machine learning model and generate predictions on it through the web UI. Now you've got what it takes to train a model on your own image dataset.
+
+#### __What was covered__
+
+* Uploading training images to Cloud Storage and creating a CSV for AutoML Vision to find these images.
+* Reviewing labels and training a model in the AutoML Vision UI.
+* Generating predictions on new cloud images.
+
+### Finish your Quest
+
+![ml_quest_icon.png](img/ml_quest_icon.png)
+![ML-Image-Processing-badge.png](img/ML-Image-Processing-badge.png)
+
+This self-paced lab is part of the Qwiklabs  [Machine Learning APIs](https://google.qwiklabs.com/quests/32) and [Intro to ML: Image Processing](https://google.qwiklabs.com/quests/85) Quests. A Quest is a series of related labs that form a learning path. Completing a Quest earns you a badge to recognize your achievement. You can make your badge (or badges) public and link to them in your online resume or social media account. Enroll in these Quests and get immediate completion credit if you've taken this lab.  [See other available Qwiklabs Quests](https://google.qwiklabs.com/catalog).
+
+### Take your next lab
+
+Continue your Quest with  [Detect Labels, Faces, and Landmarks in Images with the Cloud Vision API](https://google.qwiklabs.com/catalog_lab/1112), or check out these suggestions:
+
+* [Awwwvision: Cloud Vision API from a Kubernetes Cluster](https://google.qwiklabs.com/catalog_lab/1041)
+* [Entity and Sentiment Analysis with the Natural Language API](https://google.qwiklabs.com/catalog_lab/1113)
+
+### Next steps / learn more
+
+* Watch the  [intro video](https://www.youtube.com/watch?v=GbLQE2C181U)
+* Learn more about how AutoML Vision works by listening to the  [Google Cloud Podcast episode](https://www.gcppodcast.com/post/episode-109-cloud-automl-vision-with-amy-unruh-and-sara-robinson/)
+* Read the announcement  [blog post](https://www.blog.google/topics/google-cloud/cloud-automl-making-ai-accessible-every-business/)
+* Learn how to  [perform each step with the API](https://cloud.google.com/vision/automl/docs/beginners-guide)
+
+![[/fragments/TrainingCertificationOverview]]
+
+##### Manual Last Updated September 07, 2020
+
+##### Lab Last Tested September 07, 2020
+
+![[/fragments/copyright]]
