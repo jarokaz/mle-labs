@@ -1,0 +1,28 @@
+---
+schema_version: 1
+title: Autoscaling TensorFlow Model Deployments with TF Serving and Kubernetes
+description: AutoML Vision helps developers with limited ML expertise train high quality
+  image recognition models. In this hands-on lab, you will learn how to train a custom
+  model to recognize different types of clouds (cumulus, cumulonimbus, etc.).
+default_locale: en
+duration: 120
+max_duration: 120
+level: advanced
+tags:
+- machine learning
+- GSP777
+credits: 7
+tagline:
+resources: []
+environment_resources:
+- type: gcp_user
+  id: user_0
+  permissions:
+  - project: project_0
+    roles:
+    - roles/owner
+    - roles/appengine.appAdmin
+    - roles/bigquery.admin
+    - roles/serviceusage.serviceUsageAdmin
+- type: gcp_project
+  id: project_0

@@ -1,0 +1,66 @@
+{% set deployment = env['deployment'] %}
+{% set project = env['project'] %}
+
+resources:
+
+- name: set-iam-roles
+  action: gcp-types/cloudbuild-v1:cloudbuild.projects.builds.create
+  metadata:
+    runtimePolicy:
+    - UPDATE_ALWAYS
+  properties:
+    steps:
+    - name: registry.hub.docker.com/gcptraining/ql-cloudbuild-gcloud:1.0
+      args:
+      - {{ env['project'] }}
+      - {{ properties['region'] }}
+      - {{ properties['zone'] }}
+      - '{{ properties['keyFile'] }}'
+      - projects
+      - add-iam-policy-binding
+      - {{ env['project'] }}
+      - --member 
+      - serviceAccount:{{ env["project_number"] }}@cloudbuild.gserviceaccount.com
+      - --role
+      - roles/composer.admin
+    timeout: 120s
+
+- name: allow-1433
+  type: compute.v1.firewall
+  properties:
+    targetTags: ["allow-1433"]
+    sourceRanges: ["0.0.0.0/0"]
+    allowed:
+      - IPProtocol: TCP
+        ports: ["1433"]    
+
+- name: sqlhost
+  type: compute.v1.instance
+  properties:
+    zone: us-central1-c
+    machineType: zones/us-central1-c/machineTypes/n1-standard-2
+    tags:
+        items: ["allow-1433"]
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: projects/qwiklabs-resources/global/images/cbl311-sql-host-image
+    networkInterfaces:
+    - subnetwork: regions/us-central1/subnetworks/default
+      accessConfigs:
+      - name: External NAT
+        type: ONE_TO_ONE_NAT
+
+- name: airflow
+  action: gcp-types/cloudbuild-v1:cloudbuild.projects.builds.create
+  metadata:
+    runtimePolicy:
+    - UPDATE_ALWAYS
+  properties:
+    steps:
+    - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+      args: ['gcloud', 'composer', 'environments', 'create', 'airflow', '--location', 'us-central1', '--zone', 'us-central1-c', '--machine-type', 'n1-standard-2',  '--python-version', '3']
+    timeout: 1200s
